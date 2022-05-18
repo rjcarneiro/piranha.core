@@ -244,6 +244,7 @@ namespace Piranha
             Instance._blocks.Register<Extend.Blocks.SeparatorBlock>();
             Instance._blocks.Register<Extend.Blocks.TextBlock>();
             Instance._blocks.Register<Extend.Blocks.VideoBlock>();
+            Instance._blocks.Register<Extend.Blocks.CodeBlock>();
 
             // Compose serializers
             Instance._serializers.Register<Extend.Fields.CheckBoxField>(new CheckBoxFieldSerializer<Extend.Fields.CheckBoxField>());

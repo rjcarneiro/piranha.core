@@ -92,7 +92,7 @@ function vueCompile() {
 
 // Gulp build script
 var gulp = require("gulp"),
-    sass = require('gulp-sass'),
+    sass = require('gulp-sass')(require('sass')),
     concat = require("gulp-concat"),
     cssmin = require("gulp-cssmin"),
     rename = require("gulp-rename"),
@@ -220,6 +220,7 @@ var js = [
             "assets/src/js/components/blocks/separator-block.vue",
             "assets/src/js/components/blocks/text-block.vue",
             "assets/src/js/components/blocks/video-block.vue",
+            "assets/src/js/components/blocks/code-block.vue",
 
             "assets/src/js/components/fields/audio-field.vue",
             "assets/src/js/components/fields/checkbox-field.vue",
@@ -296,8 +297,7 @@ var js = [
 //
 gulp.task("rtl:min:css", function (done) {
     // Minimize and combine styles
-    for (var n = 0; n < css.length; n++)
-    {
+    for (var n = 0; n < css.length; n++) {
         gulp.src(css[n])
             .pipe(sass().on("error", sass.logError))
             .pipe(cssmin())
@@ -309,8 +309,7 @@ gulp.task("rtl:min:css", function (done) {
     }
 
     // Copy fonts
-    for (var n = 0; n < fonts.length; n++)
-    {
+    for (var n = 0; n < fonts.length; n++) {
         gulp.src(fonts[n])
             .pipe(gulp.dest(output + "webfonts"));
     }
@@ -322,8 +321,7 @@ gulp.task("rtl:min:css", function (done) {
 //
 gulp.task("min:css", function (done) {
     // Minimize and combine styles
-    for (var n = 0; n < css.length; n++)
-    {
+    for (var n = 0; n < css.length; n++) {
         gulp.src(css[n])
             .pipe(sass().on("error", sass.logError))
             .pipe(cssmin())
@@ -334,8 +332,7 @@ gulp.task("min:css", function (done) {
     }
 
     // Copy fonts
-    for (var n = 0; n < fonts.length; n++)
-    {
+    for (var n = 0; n < fonts.length; n++) {
         gulp.src(fonts[n])
             .pipe(gulp.dest(output + "webfonts"));
     }
@@ -346,8 +343,7 @@ gulp.task("min:css", function (done) {
 // Compile & minimize less files
 //
 gulp.task("min:js", function (done) {
-    for (var n = 0; n < js.length; n++)
-    {
+    for (var n = 0; n < js.length; n++) {
         gulp.src(js[n].items, { base: "." })
             .pipe(vueCompile())
             .pipe(concat(output + "js/" + js[n].name))
