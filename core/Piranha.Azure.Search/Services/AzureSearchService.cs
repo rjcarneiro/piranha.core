@@ -10,179 +10,171 @@
 
 using System.Text;
 using System.Text.RegularExpressions;
-using Microsoft.Azure.Search;
-using Microsoft.Azure.Search.Models;
+using Azure;
+using Azure.Search.Documents;
+using Azure.Search.Documents.Indexes;
+using Azure.Search.Documents.Indexes.Models;
+using Azure.Search.Documents.Models;
 using Piranha.Extend;
 using Piranha.Models;
 
-namespace Piranha.Azure.Search.Services
+namespace Piranha.Azure.Search.Services;
+
+/// <summary>
+/// The identity module.
+/// </summary>
+public class AzureSearchService : ISearch
 {
+    private readonly string _serviceUrl = "";
+    private readonly string _apiKey = "";
+    private readonly string _index = "";
+
     /// <summary>
-    /// The identity module.
+    /// Default constructor.
     /// </summary>
-    public class AzureSearchService : ISearch
+    /// <param name="serviceUrl">The search service url</param>
+    /// <param name="apiKey">The admin api key</param>
+    /// <param name="index">Name of the search index</param>
+    public AzureSearchService(string serviceUrl, string apiKey, string index)
     {
-        private readonly string _serviceName = "";
-        private readonly string _apiKey = "";
+        _serviceUrl = serviceUrl;
+        _apiKey = apiKey;
+        _index = index.ToLowerInvariant();
 
-        /// <summary>
-        /// Default constructor.
-        /// </summary>
-        /// <param name="serviceName">The search service name</param>
-        /// <param name="apiKey">The admin api key</param>
-        public AzureSearchService(string serviceName, string apiKey)
+        // Make sure the search indexes are up to date
+        CreateIndex(_index);
+    }
+
+    /// <summary>
+    /// Creates the main search indexes.
+    /// </summary>
+    private void CreateIndex(string indexName)
+    {
+        var indexClient = CreateSearchIndexClient();
+        FieldBuilder fieldBuilder = new FieldBuilder();
+        var searchFields = fieldBuilder.Build(typeof(Content));
+
+        var definition = new SearchIndex(indexName, searchFields);
+
+        indexClient.CreateOrUpdateIndex(definition);
+    }
+
+    /// <summary>
+    /// Creates or updates the searchable content for the
+    /// given page.
+    /// </summary>
+    /// <param name="page">The page</param>
+    public async Task SavePageAsync(PageBase page)
+    {
+        var client = CreateSearchClient();
+
+        var body = new StringBuilder();
+
+        foreach (var block in page.Blocks)
         {
-            _serviceName = serviceName;
-            _apiKey = apiKey;
-
-            // Make sure the search indexes are up to date
-            CreateIndexes();
-        }
-
-        /// <summary>
-        /// Creates the main search indexes.
-        /// </summary>
-        public void CreateIndexes()
-        {
-            using (var client = CreateClient())
+            if (block is ISearchable searchableBlock)
             {
-                var contentIndex = new Microsoft.Azure.Search.Models.Index()
-                {
-                    Name = "content",
-                    Fields = FieldBuilder.BuildForType<Content>()
-                };
-                client.Indexes.CreateOrUpdate(contentIndex);
+                body.AppendLine(searchableBlock.GetIndexedContent());
             }
         }
 
-        /// <summary>
-        /// Creates or updates the searchable content for the
-        /// given page.
-        /// </summary>
-        /// <param name="page">The page</param>
-        public async Task SavePageAsync(PageBase page)
+        var cleanHtml = new Regex("<[^>]*(>|$)");
+        var cleanSpaces = new Regex("[\\s\\r\\n]+");
+
+        var cleaned = cleanSpaces.Replace(cleanHtml.Replace(body.ToString(), " "), " ").Trim();
+
+        IndexDocumentsBatch<Content> batch = IndexDocumentsBatch.Create(
+            IndexDocumentsAction.MergeOrUpload(
+                            new Content
+                            {
+                                Slug = page.Slug,
+                                ContentId = page.Id.ToString(),
+                                ContentType = "page",
+                                Title = page.Title,
+                                Body = cleaned
+                            }
+            )
+        );
+        await client.IndexDocumentsAsync(batch);
+    }
+
+    /// <summary>
+    /// Deletes the given page from the search index.
+    /// </summary>
+    /// <param name="page">The page to delete</param>
+    public async Task DeletePageAsync(PageBase page)
+    {
+        var client = CreateSearchClient();
+        var batch = IndexDocumentsBatch.Delete("contentId", new List<string> { page.Id.ToString() });
+        await client.IndexDocumentsAsync(batch);
+    }
+
+    /// <summary>
+    /// Creates or updates the searchable content for the
+    /// given post.
+    /// </summary>
+    /// <param name="post">The post</param>
+    public async Task SavePostAsync(PostBase post)
+    {
+        var client = CreateSearchClient();
+        var body = new StringBuilder();
+
+        foreach (var block in post.Blocks)
         {
-            using (var client = CreateClient())
+            if (block is ISearchable searchableBlock)
             {
-                var indexClient = client.Indexes.GetClient("content");
-                var body = new StringBuilder();
-
-                foreach (var block in page.Blocks)
-                {
-                    if (block is ISearchable searchableBlock)
-                    {
-                        body.AppendLine(searchableBlock.GetIndexedContent());
-                    }
-                }
-
-                var cleanHtml = new Regex("<[^>]*(>|$)");
-                var cleanSpaces = new Regex("[\\s\\r\\n]+");
-
-                var cleaned = cleanSpaces.Replace(cleanHtml.Replace(body.ToString(), " "), " ").Trim();
-
-                var actions = new IndexAction<Content>[]
-                {
-                    IndexAction.MergeOrUpload(
-                        new Content
-                        {
-                            Slug = page.Slug,
-                            ContentId = page.Id.ToString(),
-                            ContentType = "page",
-                            Title = page.Title,
-                            Body = cleaned
-                        }
-                    )
-                };
-                var batch = IndexBatch.New(actions);
-
-                await indexClient.Documents.IndexAsync(batch);
+                body.AppendLine(searchableBlock.GetIndexedContent());
             }
         }
 
-        /// <summary>
-        /// Deletes the given page from the search index.
-        /// </summary>
-        /// <param name="page">The page to delete</param>
-        public async Task DeletePageAsync(PageBase page)
-        {
-            using (var client = CreateClient())
-            {
-                var indexClient = client.Indexes.GetClient("content");
+        var cleanHtml = new Regex("<[^>]*(>|$)");
+        var cleanSpaces = new Regex("[\\s\\r\\n]+");
 
-                var batch = IndexBatch.Delete("contentId", new List<string> { page.Id.ToString() });
+        var cleaned = cleanSpaces.Replace(cleanHtml.Replace(body.ToString(), " "), " ").Trim();
 
-                await indexClient.Documents.IndexAsync(batch);
-            }
-        }
+        IndexDocumentsBatch<Content> batch = IndexDocumentsBatch.Create(
+            IndexDocumentsAction.MergeOrUpload(
+                            new Content
+                            {
+                                Slug = post.Slug,
+                                ContentId = post.Id.ToString(),
+                                ContentType = "post",
+                                Title = post.Title,
+                                Category = post.Category.Title,
+                                Tags = post.Tags.Select(t => t.Title).ToList(),
+                                Body = cleaned
+                            }
+            )
+        );
+        await client.IndexDocumentsAsync(batch);
+    }
 
-        /// <summary>
-        /// Creates or updates the searchable content for the
-        /// given post.
-        /// </summary>
-        /// <param name="post">The post</param>
-        public async Task SavePostAsync(PostBase post)
-        {
-            using (var client = CreateClient())
-            {
-                var indexClient = client.Indexes.GetClient("content");
-                var body = new StringBuilder();
+    /// <summary>
+    /// Deletes the given post from the search index.
+    /// </summary>
+    /// <param name="post">The post to delete</param>
+    public async Task DeletePostAsync(PostBase post)
+    {
+        var client = CreateSearchClient();
+        var batch = IndexDocumentsBatch.Delete("contentId", new List<string> { post.Id.ToString() });
+        await client.IndexDocumentsAsync(batch);
+    }
 
-                foreach (var block in post.Blocks)
-                {
-                    if (block is ISearchable searchableBlock)
-                    {
-                        body.AppendLine(searchableBlock.GetIndexedContent());
-                    }
-                }
+    /// <summary>
+    /// Creates the SearchIndexClient.
+    /// </summary>
+    private SearchIndexClient CreateSearchIndexClient()
+    {
+        SearchIndexClient indexClient = new SearchIndexClient(new Uri(_serviceUrl), new AzureKeyCredential(_apiKey));
+        return indexClient;
+    }
 
-                var cleanHtml = new Regex("<[^>]*(>|$)");
-                var cleanSpaces = new Regex("[\\s\\r\\n]+");
-
-                var cleaned = cleanSpaces.Replace(cleanHtml.Replace(body.ToString(), " "), " ").Trim();
-
-                var actions = new IndexAction<Content>[]
-                {
-                    IndexAction.MergeOrUpload(
-                        new Content
-                        {
-                            Slug = post.Slug,
-                            ContentId = post.Id.ToString(),
-                            ContentType = "post",
-                            Title = post.Title,
-                            Category = post.Category.Title,
-                            Tags = post.Tags.Select(t => t.Title).ToList(),
-                            Body = cleaned
-                        }
-                    )
-                };
-                var batch = IndexBatch.New(actions);
-
-                await indexClient.Documents.IndexAsync(batch);
-            }
-        }
-
-        /// <summary>
-        /// Deletes the given post from the search index.
-        /// </summary>
-        /// <param name="post">The post to delete</param>
-        public async Task DeletePostAsync(PostBase post)
-        {
-            using (var client = CreateClient())
-            {
-                var indexClient = client.Indexes.GetClient("content");
-
-                var batch = IndexBatch.Delete("contentId", new List<string> { post.Id.ToString() });
-
-                await indexClient.Documents.IndexAsync(batch);
-            }
-        }
-
-        /// <summary>
-        /// Creates the search client.
-        /// </summary>
-        private SearchServiceClient CreateClient()
-        {
-            return new SearchServiceClient(_serviceName, new SearchCredentials(_apiKey));
-        }
+    /// <summary>
+    /// Creates the SearchClient.
+    /// </summary>
+    private SearchClient CreateSearchClient()
+    {
+        SearchClient searchClient = new SearchClient(new Uri(_serviceUrl), _index, new AzureKeyCredential(_apiKey));
+        return searchClient;
     }
 }

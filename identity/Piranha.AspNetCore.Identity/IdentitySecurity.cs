@@ -9,58 +9,73 @@
  */
 
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Options;
 using Piranha.AspNetCore.Identity.Data;
 using Piranha.Manager.LocalAuth;
 
-namespace Piranha.AspNetCore.Identity
+namespace Piranha.AspNetCore.Identity;
+
+public class IdentitySecurity : ISecurity
 {
-    public class IdentitySecurity : ISecurity
+    /// <summary>
+    /// The optional identity seed.
+    /// </summary>
+    private readonly IIdentitySeed _seed;
+
+    /// <summary>
+    /// The sign in manager.
+    /// </summary>
+    private readonly SignInManager<User> _signInManager;
+
+    /// <summary>
+    /// The identity options.
+    /// </summary>
+    private readonly IdentityOptions _options;
+
+    /// <summary>
+    /// Default constructor.
+    /// </summary>
+    public IdentitySecurity(SignInManager<User> signInManager, IOptions<IdentityOptions> identityOptions, IIdentitySeed seed = null)
     {
-        /// <summary>
-        /// The optional identity seed.
-        /// </summary>
-        private readonly IIdentitySeed _seed;
+        _signInManager = signInManager;
+        _options = identityOptions.Value;
+        _seed = seed;
+    }
 
-        /// <summary>
-        /// The sign in manager.
-        /// </summary>
-        private readonly SignInManager<User> _signInManager;
-
-        /// <summary>
-        ///     Default constructor.
-        /// </summary>
-        public IdentitySecurity(SignInManager<User> signInManager, IIdentitySeed seed = null)
+    /// <summary>
+    /// Authenticates and signs in the user with the
+    /// given credentials.
+    /// </summary>
+    /// <param name="context">The current application context</param>
+    /// <param name="username">The username</param>
+    /// <param name="password">The password</param>
+    /// <returns>If the user was signed in</returns>
+    public async Task<LoginResult> SignIn(object context, string username, string password)
+    {
+        if (_seed != null)
         {
-            _signInManager = signInManager;
-            _seed = seed;
+            await _seed.CreateAsync();
         }
+        var result = await _signInManager.PasswordSignInAsync(username, password, false,
+            _options.Lockout.MaxFailedAccessAttempts > 0 ? true : false);
 
-        /// <summary>
-        /// Authenticates and signs in the user with the
-        /// given credentials.
-        /// </summary>
-        /// <param name="context">The current application context</param>
-        /// <param name="username">The username</param>
-        /// <param name="password">The password</param>
-        /// <returns>If the user was signed in</returns>
-        public async Task<bool> SignIn(object context, string username, string password)
+        if (result.Succeeded)
         {
-            if (_seed != null)
-            {
-                await _seed.CreateAsync();
-            }
-
-            var result = await _signInManager.PasswordSignInAsync(username, password, false, false);
-            return result.Succeeded;
+            return LoginResult.Succeeded;
         }
-
-        /// <summary>
-        /// Signs out the current user.
-        /// </summary>
-        /// <param name="context">The current application context</param>
-        public Task SignOut(object context)
+        else if (result.IsLockedOut)
         {
-            return _signInManager.SignOutAsync();
+            return LoginResult.Locked;
         }
+        return LoginResult.Failed;
+    }
+
+    /// <summary>
+    /// Signs out the current user.
+    /// </summary>
+    /// <param name="context">The current application context</param>
+    public Task SignOut(object context)
+    {
+        return _signInManager.SignOutAsync();
     }
 }

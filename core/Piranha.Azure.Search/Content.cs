@@ -9,66 +9,55 @@
  */
 
 using System.ComponentModel.DataAnnotations;
-using Microsoft.Azure.Search;
-using Microsoft.Azure.Search.Models;
+using Azure.Search.Documents.Indexes;
+using Azure.Search.Documents.Indexes.Models;
 
-namespace Piranha.Azure.Search
+namespace Piranha.Azure.Search;
+
+/// <summary>
+/// Search index model for Azure Search.
+/// </summary>
+public class Content
 {
     /// <summary>
-    /// Search index model for Azure Search.
+    /// Gets/sets the unique content id.
     /// </summary>
-    [SerializePropertyNamesAsCamelCase]
-    public class Content
-    {
-        /// <summary>
-        /// Gets/sets the unique content id.
-        /// </summary>
-        [Key]
-        public string ContentId { get; set; }
+    [Key]
+    public string ContentId { get; set; }
 
-        /// <summary>
-        /// Gets/sets the content slug.
-        /// </summary>
-        [IsSearchable]
-        [Analyzer(AnalyzerName.AsString.StandardLucene)]
-        public string Slug { get; set; }
+    /// <summary>
+    /// Gets/sets the content slug.
+    /// </summary>
+    [SearchableField(AnalyzerName = LexicalAnalyzerName.Values.StandardLucene)]
+    public string Slug { get; set; }
 
-        /// <summary>
-        /// Gets/sets the content type.
-        /// </summary>
-        [IsFilterable]
-        public string ContentType { get; set; }
+    /// <summary>
+    /// Gets/sets the content type.
+    /// </summary>
+    [SimpleField(IsFilterable = true)]
+    public string ContentType { get; set; }
 
-        /// <summary>
-        /// Gets/sets the main title.
-        /// </summary>
-        [IsSearchable]
-        [IsSortable]
-        [Analyzer(AnalyzerName.AsString.StandardLucene)]
-        public string Title { get; set; }
+    /// <summary>
+    /// Gets/sets the main title.
+    /// </summary>
+    [SearchableField(AnalyzerName = LexicalAnalyzerName.Values.StandardLucene, IsSortable = true)]
+    public string Title { get; set; }
 
-        /// <summary>
-        /// Gets/sets the optional category.
-        /// </summary>
-        [IsFilterable]
-        [IsSearchable]
-        [IsSortable]
-        [Analyzer(AnalyzerName.AsString.StandardLucene)]
-        public string Category { get; set; }
+    /// <summary>
+    /// Gets/sets the optional category.
+    /// </summary>
+    [SearchableField(AnalyzerName = LexicalAnalyzerName.Values.StandardLucene, IsFilterable = true, IsSortable = true)]
+    public string Category { get; set; }
 
-        /// <summary>
-        /// Gets/sets the optional tags.
-        /// </summary>
-        [IsFilterable]
-        [IsSearchable]
-        [Analyzer(AnalyzerName.AsString.StandardLucene)]
-        public IList<string> Tags { get; set; } = new List<string>();
+    /// <summary>
+    /// Gets/sets the optional tags.
+    /// </summary>
+    [SearchableField(AnalyzerName = LexicalAnalyzerName.Values.StandardLucene, IsFilterable = true, IsFacetable = true)]
+    public IList<string> Tags { get; set; } = new List<string>();
 
-        /// <summary>
-        /// Gets/sets the main body.
-        /// </summary>
-        [IsSearchable]
-        [Analyzer(AnalyzerName.AsString.StandardLucene)]
-        public string Body { get; set; }
-    }
+    /// <summary>
+    /// Gets/sets the main body.
+    /// </summary>
+    [SearchableField(AnalyzerName = LexicalAnalyzerName.Values.StandardLucene)]
+    public string Body { get; set; }
 }

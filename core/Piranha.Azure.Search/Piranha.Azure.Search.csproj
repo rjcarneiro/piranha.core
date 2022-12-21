@@ -1,13 +1,12 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
     <NoWarn>$(NoWarn);1591</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Azure.Search.Documents" Version="11.3.0" />
     <PackageReference Include="Microsoft.Rest.ClientRuntime" Version="2.3.22" />
-    <PackageReference Include="Microsoft.Azure.Search" Version="10.1.0" />
   </ItemGroup>
 
   <ItemGroup>
