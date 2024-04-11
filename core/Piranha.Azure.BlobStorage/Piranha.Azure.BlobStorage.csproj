@@ -11,8 +11,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Azure.Storage.Blobs" Version="12.13.0" />
-    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="all" />
+    <PackageReference Include="Azure.Storage.Blobs" Version="12.18.0" />
     <ProjectReference Include="..\Piranha\Piranha.csproj" />
   </ItemGroup>
 

@@ -651,7 +651,7 @@ public class PageTests : BaseTestsAsync
         {
             var page = await MyCollectionPage.CreateAsync(api);
 
-            Assert.Equal(0, page.Texts.Count);
+            Assert.Empty(page.Texts);
 
             page.SiteId = SITE_ID;
             page.Title = "Another collection page";
@@ -660,7 +660,7 @@ public class PageTests : BaseTestsAsync
 
             page = await api.Pages.GetBySlugAsync<MyCollectionPage>(Piranha.Utils.GenerateSlug(page.Title), SITE_ID);
 
-            Assert.Equal(0, page.Texts.Count);
+            Assert.Empty(page.Texts);
         }
     }
 
@@ -691,7 +691,7 @@ public class PageTests : BaseTestsAsync
         {
             var page = await MyCollectionPage.CreateAsync(api);
 
-            Assert.Equal(0, page.Teasers.Count);
+            Assert.Empty(page.Teasers);
 
             page.SiteId = SITE_ID;
             page.Title = "Fourth collection page";
@@ -700,7 +700,7 @@ public class PageTests : BaseTestsAsync
 
             page = await api.Pages.GetBySlugAsync<MyCollectionPage>(Piranha.Utils.GenerateSlug(page.Title), SITE_ID);
 
-            Assert.Equal(0, page.Teasers.Count);
+            Assert.Empty(page.Teasers);
         }
     }
 
@@ -747,11 +747,6 @@ public class PageTests : BaseTestsAsync
     {
         using (var api = CreateApi())
         {
-            using (var config = new Piranha.Config(api))
-            {
-                config.HierarchicalPageSlugs = true;
-            }
-
             var page = await MyPage.CreateAsync(api, "MyPage");
             page.Id = Guid.NewGuid();
             page.ParentId = PAGE_1_ID;
@@ -766,9 +761,6 @@ public class PageTests : BaseTestsAsync
 
             Assert.NotNull(page);
             Assert.Equal("my-first-page/my-subpage", page.Slug);
-
-            var param = await api.Params.GetByKeyAsync(Piranha.Config.PAGES_HIERARCHICAL_SLUGS);
-            await api.Params.DeleteAsync(param);
         }
     }
 
@@ -797,8 +789,10 @@ public class PageTests : BaseTestsAsync
             Assert.NotNull(page);
             Assert.Equal("my-second-subpage", page.Slug);
 
-            var param = await api.Params.GetByKeyAsync(Piranha.Config.PAGES_HIERARCHICAL_SLUGS);
-            await api.Params.DeleteAsync(param);
+            using (var config = new Piranha.Config(api))
+            {
+                config.HierarchicalPageSlugs = true;
+            }
         }
     }
 

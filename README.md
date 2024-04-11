@@ -2,8 +2,6 @@
 
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/0fa7c8bcd5234443b79b075436e92d7e)](https://www.codacy.com/gh/PiranhaCMS/piranha.core/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=PiranhaCMS/piranha.core&amp;utm_campaign=Badge_Grade)
 [![CodeFactor](https://www.codefactor.io/repository/github/piranhacms/piranha.core/badge)](https://www.codefactor.io/repository/github/piranhacms/piranha.core)
-[![Total alerts](https://img.shields.io/lgtm/alerts/g/PiranhaCMS/piranha.core.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/PiranhaCMS/piranha.core/alerts/)
-[![Language grade: JavaScript](https://img.shields.io/lgtm/grade/javascript/g/PiranhaCMS/piranha.core.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/PiranhaCMS/piranha.core/context:javascript)
 [![Sponsors](https://opencollective.com/piranhacms/tiers/sponsor/badge.svg?label=sponsor&color=brightgreen)](Sponsors)
 [![Backers](https://opencollective.com/piranhacms/tiers/backer/badge.svg?label=backer&color=brightgreen)](Backers)
 [![Gitter chat](https://badges.gitter.im/PiranhaCMS/Piranha.png)](https://gitter.im/PiranhaCMS/Piranha)
@@ -18,22 +16,13 @@
 
 ## About
 
-This is a **complete rewrite** of Piranha CMS. The goal of this rewrite is to create 
-a version capable of targeting multiple platforms & frameworks with minimal dependencies, 
-but still provide a flexible & high performance CMS library.
-
-Piranha is currently built for `.NET 6` and uses in its simplest form the following awesome packages:
-
-* [AutoMapper](https://github.com/AutoMapper/AutoMapper)
-* [Markdig](https://github.com/xoofx/markdig)
-* [Microsoft.EntityFrameworkCore](https://github.com/dotnet/efcore)
-* [Newtonsoft.Json](https://github.com/JamesNK/Newtonsoft.Json)
+Piranha CMS is a decoupled, cross-platform CMS built for `.NET8` and `Entity Framework Core`. It has a modular and extensible architecture and supports a multitude of hosting and deployment scenarios.
 
 ## Getting started
 
 ### Prerequisites
 
-* [.NET 6.0 SDK](https://dotnet.microsoft.com/download/dotnet/6.0)
+* [.NET 8.0 SDK](https://dotnet.microsoft.com/en-us/download)
 * An IDE or Editor of your choice
 
 ### Create a new project from our templates
@@ -88,10 +77,6 @@ the [official documentation here](http://piranhacms.org/docs/architecture/authen
 > gulp min:css
 ~~~
 
-### Visual Studio users
-
-For people running Visual Studio 2017 almost all of the above steps will be handled by the IDE. Just get the source code, open the `.sln` file and you're good to go.
-
 ## Backers
 
 Support Piranha CMS with a monthly donation and help us focus on giving you even more features and better support. [Piranha CMS @ Open Collective](https://opencollective.com/piranhacms)
@@ -104,6 +89,8 @@ Support Piranha CMS with a monthly donation and help us focus on giving you even
 These are our financial sponsors! You can also become a sponsor either through GitHub or [Open Collective](https://opencollective.com/piranhacms).
 
 [![Arcady](https://piranhacms.azureedge.net/uploads/672d2600-8822-4b74-bb06-392f0c4aa38d-arcady_black.png)](https://www.arcady.nl)
+
+[![Peak Crypto](https://piranhacms.azureedge.net/uploads/5b9b6a74-5cf6-456d-a8a4-5d831eed5509-peak-crypto-small.png)](https://www.peakcrypto.com/)
 
 ## Code of Conduct
 
